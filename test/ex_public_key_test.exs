@@ -21,52 +21,68 @@ defmodule ExPublicKeyTest do
 
     # export the RSA public key to a file with openssl
     {_, 0} =
-      System.cmd("openssl", [
-        "rsa",
-        "-in",
-        rsa_private_key_path,
-        "-outform",
-        "PEM",
-        "-pubout",
-        "-out",
-        rsa_public_key_path
-      ], sys_cmd_opts)
+      System.cmd(
+        "openssl",
+        [
+          "rsa",
+          "-in",
+          rsa_private_key_path,
+          "-outform",
+          "PEM",
+          "-pubout",
+          "-out",
+          rsa_public_key_path
+        ],
+        sys_cmd_opts
+      )
 
     # generate a passphrase protected RSA private key with openssl
     {_, 0} =
-      System.cmd("openssl", [
-        "genrsa",
-        "-out",
-        rsa_secure_private_key_path,
-        "-passout",
-        "pass:#{rand_string}",
-        "2048"
-      ], sys_cmd_opts)
+      System.cmd(
+        "openssl",
+        [
+          "genrsa",
+          "-out",
+          rsa_secure_private_key_path,
+          "-passout",
+          "pass:#{rand_string}",
+          "2048"
+        ],
+        sys_cmd_opts
+      )
 
     # save DER encoded form
     {_, 0} =
-      System.cmd("openssl", [
-        "rsa",
-        "-in",
-        rsa_private_key_path,
-        "-outform",
-        "DER",
-        "-out",
-        rsa_private_key_path_der],
-        sys_cmd_opts)
+      System.cmd(
+        "openssl",
+        [
+          "rsa",
+          "-in",
+          rsa_private_key_path,
+          "-outform",
+          "DER",
+          "-out",
+          rsa_private_key_path_der
+        ],
+        sys_cmd_opts
+      )
 
     # save DER encoded form (pub)
     {_, 0} =
-      System.cmd("openssl", [
-        "rsa",
-        "-in",
-        rsa_private_key_path,
-        "-pubout",
-        "-outform",
-        "DER",
-        "-out",
-        rsa_public_key_path_der],
-        sys_cmd_opts)
+      System.cmd(
+        "openssl",
+        [
+          "rsa",
+          "-in",
+          rsa_private_key_path,
+          "-pubout",
+          "-outform",
+          "DER",
+          "-out",
+          rsa_public_key_path_der
+        ],
+        sys_cmd_opts
+      )
 
     on_exit(fn ->
       # cleanup: delete the temp keys
@@ -84,7 +100,7 @@ defmodule ExPublicKeyTest do
        rsa_public_key_path: rsa_public_key_path,
        rsa_public_key_path_der: rsa_public_key_path_der,
        rsa_secure_private_key_path: rsa_secure_private_key_path,
-       passphrase: rand_string,
+       passphrase: rand_string
      ]}
   end
 
@@ -276,10 +292,10 @@ defmodule ExPublicKeyTest do
         assert false, "this should have provoked an error: #{inspect(signature)}"
 
       {:error, reason} ->
-        assert true, "the right error was provoked: #{inspect reason}"
+        assert true, "the right error was provoked: #{inspect(reason)}"
 
       {:error, error, _stack_trace} ->
-        assert false, "the wrong error was provoked: #{inspect error}"
+        assert false, "the wrong error was provoked: #{inspect(error)}"
 
       _x ->
         # IO.inspect x
@@ -296,7 +312,7 @@ defmodule ExPublicKeyTest do
     msg = %{"name_first" => "Chuck", "name_last" => "Norris"}
 
     # serialize the JSON
-    msg_serialized = Poison.encode!(msg)
+    msg_serialized = Jason.encode!(msg)
 
     # generate time-stamp
     ts = ExCrypto.universal_time(:unix)
@@ -329,7 +345,7 @@ defmodule ExPublicKeyTest do
     assert(sig_valid)
 
     # un-serialize the JSON
-    recv_msg_unserialized = Poison.Parser.parse!(recv_msg_serialized)
+    recv_msg_unserialized = Jason.decode!(recv_msg_serialized)
     assert(msg == recv_msg_unserialized)
   end
 
@@ -361,5 +377,4 @@ defmodule ExPublicKeyTest do
     assert String.starts_with?(pub_key_inspect, "#ExPublicKey.RSAPublicKey<")
     assert String.ends_with?(pub_key_inspect, ">")
   end
-
 end

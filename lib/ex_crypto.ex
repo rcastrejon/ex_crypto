@@ -12,6 +12,9 @@ defmodule ExCrypto do
   @aes_block_size 16
   @iv_bit_length 128
   @bitlength_error "IV must be exactly 128 bits and key must be exactly 128, 192 or 256 bits"
+  @spec __using__(any) ::
+          {:import, [{:column, 7} | {:context, ExCrypto}, ...],
+           [{:__aliases__, [...], [...]}, ...]}
   defmacro __using__(_) do
     quote do
       import ExCrypto
@@ -31,7 +34,10 @@ defmodule ExCrypto do
   end
 
   defp test_key_and_iv_bitlength(nil), do: :ok
-  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length, do: {:error, @bitlength_error}
+
+  defp test_key_and_iv_bitlength({_key, iv}) when bit_size(iv) != @iv_bit_length,
+    do: {:error, @bitlength_error}
+
   defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 128) == 0, do: :ok
   defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 192) == 0, do: :ok
   defp test_key_and_iv_bitlength({key, _iv}) when rem(bit_size(key), 256) == 0, do: :ok
@@ -373,7 +379,8 @@ defmodule ExCrypto do
       true
 
   """
-  @spec decrypt(binary, binary, binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
+  @spec decrypt(binary, binary, binary, binary, binary) ::
+          {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, authentication_data, initialization_vector, cipher_text, cipher_tag) do
     _decrypt(key, initialization_vector, {authentication_data, cipher_text, cipher_tag}, :aes_gcm)
   end
@@ -395,10 +402,12 @@ defmodule ExCrypto do
       true
 
   """
-  @spec decrypt(binary, binary, binary) :: {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
+  @spec decrypt(binary, binary, binary) ::
+          {:ok, binary} | {:error, :decrypt_failed} | {:error, binary}
   def decrypt(key, initialization_vector, cipher_text) do
-    with {:ok, padded_cleartext} <- _decrypt(key, initialization_vector, cipher_text, :aes_cbc256),
-      do: {:ok, unpad(padded_cleartext)}
+    with {:ok, padded_cleartext} <-
+           _decrypt(key, initialization_vector, cipher_text, :aes_cbc256),
+         do: {:ok, unpad(padded_cleartext)}
   catch
     kind, error -> normalize_error(__STACKTRACE__, kind, error, {key, initialization_vector})
   end
@@ -481,6 +490,7 @@ defmodule ExCrypto do
     # otp 23 deprecated and otp 24 removed retired cipher names
     # http://erlang.org/doc/apps/crypto/new_api.html#retired-cipher-names
     defp map_algorithm(:aes_cbc256, _key), do: :aes_256_cbc
+
     defp map_algorithm(:aes_gcm, key) do
       case bit_size(key) do
         128 -> :aes_128_gcm
@@ -490,19 +500,46 @@ defmodule ExCrypto do
     end
 
     defp crypto_block_encrypt(algorithm, key, initialization_vector, {aad, plain_text}) do
-      :crypto.crypto_one_time_aead(map_algorithm(algorithm, key), key, initialization_vector, plain_text, aad, true)
+      :crypto.crypto_one_time_aead(
+        map_algorithm(algorithm, key),
+        key,
+        initialization_vector,
+        plain_text,
+        aad,
+        true
+      )
     end
 
     defp crypto_block_encrypt(algorithm, key, initialization_vector, plain_text) do
-      :crypto.crypto_one_time(map_algorithm(algorithm, key), key, initialization_vector, plain_text, true)
+      :crypto.crypto_one_time(
+        map_algorithm(algorithm, key),
+        key,
+        initialization_vector,
+        plain_text,
+        true
+      )
     end
 
     defp crypto_block_decrypt(algorithm, key, initialization_vector, {aad, data, tag}) do
-      :crypto.crypto_one_time_aead(map_algorithm(algorithm, key), key, initialization_vector, data, aad, tag, false)
+      :crypto.crypto_one_time_aead(
+        map_algorithm(algorithm, key),
+        key,
+        initialization_vector,
+        data,
+        aad,
+        tag,
+        false
+      )
     end
 
     defp crypto_block_decrypt(algorithm, key, initialization_vector, data) do
-      :crypto.crypto_one_time(map_algorithm(algorithm, key), key, initialization_vector, data, false)
+      :crypto.crypto_one_time(
+        map_algorithm(algorithm, key),
+        key,
+        initialization_vector,
+        data,
+        false
+      )
     end
   else
     defp crypto_block_encrypt(algorithm, key, initialization_vector, encryption_payload) do

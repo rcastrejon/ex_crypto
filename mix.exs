@@ -33,7 +33,7 @@ defmodule ExCrypto.Mixfile do
 
   defp deps do
     [
-      {:poison, ">= 2.0.0"},
+      {:jason, "~> 1.4", only: [:test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
@@ -42,7 +42,7 @@ defmodule ExCrypto.Mixfile do
   defp aliases do
     [
       setup: ["deps.get"],
-      test: ["test --trace"],
+      test: ["test --trace"]
     ]
   end
 
